@@ -3,8 +3,8 @@ import { ethers } from 'ethers';
 import { WalletConnectModal } from '@walletconnect/modal';
 
 const walletConnectModal = new WalletConnectModal({
-  projectId: '71c1a7347111a137ad1c50ab795635b5', // Your WalletConnect project ID clearly here
-  chains: [1], // Ethereum mainnet
+  projectId: '71c1a7347111a137ad1c50ab795635b5',
+  chains: [1],
 });
 
 function App() {
@@ -12,7 +12,10 @@ function App() {
 
   const connectWallet = async () => {
     try {
-      const provider = await walletConnectModal.connect();
+      const provider = await walletConnectModal.connect({
+        explorerRecommendedWalletIds: ['metamask', 'trust'], 
+      });
+
       const ethersProvider = new ethers.BrowserProvider(provider);
       const signer = await ethersProvider.getSigner();
       const address = await signer.getAddress();
@@ -20,26 +23,25 @@ function App() {
       alert(`Connected wallet: ${address}`);
     } catch (error) {
       console.error(error);
-      alert('Wallet connection failed.');
+      alert('Wallet connection failed: ' + error.message);
     }
   };
 
   const payNow = async () => {
     if (!walletAddress) return alert('Please connect wallet first!');
-
     try {
       const provider = new ethers.BrowserProvider(walletConnectModal.getWalletProvider());
       const signer = await provider.getSigner();
 
       const tx = await signer.sendTransaction({
-        to: '0xF1d3290d7d74d9254A751e745622f226B3f5dFD7', // Clearly your Ethereum wallet address here
+        to: '0xF1d3290d7d74d9254A751e745622f226B3f5dFD7',
         value: ethers.parseEther('0.01'),
       });
 
       alert(`✅ Payment sent! TX: ${tx.hash}`);
     } catch (error) {
       console.error(error);
-      alert('Payment failed.');
+      alert('Payment failed: ' + error.message);
     }
   };
 
@@ -64,5 +66,3 @@ function App() {
 }
 
 export default App;
-// Trigger redeployment again clearly
-// force redeploy again
