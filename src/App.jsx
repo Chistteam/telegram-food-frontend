@@ -1,26 +1,24 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
-import { WalletConnectModal } from '@walletconnect/modal';
-
-const walletConnectModal = new WalletConnectModal({
-  projectId: '71c1a7347111a137ad1c50ab795635b5',
-  chains: [1],
-});
+import Web3 from 'web3';
+import WalletConnectProvider from '@walletconnect/web3-provider';
 
 function App() {
   const [walletAddress, setWalletAddress] = useState('');
 
   const connectWallet = async () => {
     try {
-      const provider = await walletConnectModal.connect({
-        explorerRecommendedWalletIds: ['metamask', 'trust'], 
+      const provider = new WalletConnectProvider({
+        rpc: {
+          1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID" // ← explicitly your Infura ID here
+        },
       });
 
-      const ethersProvider = new ethers.BrowserProvider(provider);
-      const signer = await ethersProvider.getSigner();
-      const address = await signer.getAddress();
-      setWalletAddress(address);
-      alert(`Connected wallet: ${address}`);
+      await provider.enable();
+      const web3 = new Web3(provider);
+      const accounts = await web3.eth.getAccounts();
+      setWalletAddress(accounts[0]);
+
+      alert(`Connected wallet: ${accounts[0]}`);
     } catch (error) {
       console.error(error);
       alert('Wallet connection failed: ' + error.message);
@@ -30,15 +28,22 @@ function App() {
   const payNow = async () => {
     if (!walletAddress) return alert('Please connect wallet first!');
     try {
-      const provider = new ethers.BrowserProvider(walletConnectModal.getWalletProvider());
-      const signer = await provider.getSigner();
-
-      const tx = await signer.sendTransaction({
-        to: '0xF1d3290d7d74d9254A751e745622f226B3f5dFD7',
-        value: ethers.parseEther('0.01'),
+      const provider = new WalletConnectProvider({
+        rpc: {
+          1: "https://mainnet.infura.io/v3/YOUR_INFURA_ID" // explicitly your Infura ID here again
+        },
       });
 
-      alert(`✅ Payment sent! TX: ${tx.hash}`);
+      await provider.enable();
+      const web3 = new Web3(provider);
+
+      const tx = await web3.eth.sendTransaction({
+        from: walletAddress,
+        to: '0xF1d3290d7d74d9254A751e745622f226B3f5dFD7',
+        value: web3.utils.toWei('0.01', 'ether'),
+      });
+
+      alert(`✅ Payment sent! TX: ${tx.transactionHash}`);
     } catch (error) {
       console.error(error);
       alert('Payment failed: ' + error.message);
